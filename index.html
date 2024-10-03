@@ -177,7 +177,26 @@
     </div>
 
     <script>
-        function copyText(button) {
+        async function requestClipboardPermission() {
+          try {
+            const result = await navigator.permissions.query({ name: 'clipboard-write' });
+            if (result.state === 'granted' || result.state === 'prompt') {
+              // Permission granted or user will be prompted for permission
+              return true;
+            } else {
+              // Permission denied
+              console.error('Clipboard write permission denied');
+              return false;
+            }
+          } catch (error) {
+            console.error('Error requesting clipboard permission:', error);
+            return false;
+          }
+        }
+        
+        async function copyText(button) {
+            const hasPermission = await requestClipboardPermission();
+            if (hasPermission) {
             const input = button.previousElementSibling.previousElementSibling;
             navigator.clipboard.writeText(input.value)
                 .then(() => {
@@ -192,6 +211,7 @@
                 .catch(err => {
                     console.error('Failed to copy text: ', err);
                 });
+           }
         }
 
         function deleteRow(button) {
