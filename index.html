@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereal Clipboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #1a1f35 0%, #2d1b41 100%);
+            color: #e0e0ff;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .container {
+            position: relative;
+        }
+        .background-blur {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(99, 56, 255, 0.1) 0%, transparent 50%);
+            filter: blur(100px);
+            z-index: -1;
+        }
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #c379ff, #7c4dff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(124, 77, 255, 0.3);
+        }
+        .description {
+            color: #b3b3cc;
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .paste-row {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 12px;
+            transform: perspective(1000px) rotateX(2deg);
+        }
+        input {
+            flex-grow: 1;
+            padding: 16px 20px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(124, 77, 255, 0.2);
+        }
+        button {
+            padding: 16px 24px;
+            background: rgba(124, 77, 255, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            background: rgba(124, 77, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(124, 77, 255, 0.3);
+        }
+        .delete-btn {
+            background: rgba(255, 59, 48, 0.2);
+        }
+        .delete-btn:hover {
+            background: rgba(255, 59, 48, 0.4);
+            box-shadow: 0 12px 40px rgba(255, 59, 48, 0.3);
+        }
+        #add-row {
+            width: 100%;
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+        #add-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-style: solid;
+        }
+        .export-import {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .export-import-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        #json-input {
+            width: 100%;
+            height: 120px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #ffffff;
+            font-family: 'Monaco', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        #json-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(124, 77, 255, 0.2);
+        }
+        .floating-orb {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(124, 77, 255, 0.4), transparent);
+            filter: blur(60px);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+        .orb1 { top: 10%; left: 10%; }
+        .orb2 { bottom: 10%; right: 10%; animation-delay: -10s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(50px, 50px) rotate(90deg); }
+            50% { transform: translate(0, 100px) rotate(180deg); }
+            75% { transform: translate(-50px, 50px) rotate(270deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-blur"></div>
+    <div class="floating-orb orb1"></div>
+    <div class="floating-orb orb2"></div>
+    <div class="container">
+        <h1>Quick Clip</h1>
+        <p class="description">Quickly copy snippets of text to clipboard.</p>
+        
+        <div id="paste-container"></div>
+        <button id="add-row" onclick="addRow()">Add New Row</button>
+
+        <div class="export-import">
+            <div class="export-import-buttons">
+                <button onclick="exportJSON()">Export</button>
+                <button onclick="loadJSON()">Load</button>
+            </div>
+            <textarea id="json-input" placeholder="Paste JSON data here ..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        function copyText(button) {
+            const input = button.previousElementSibling.previousElementSibling;
+            navigator.clipboard.writeText(input.value)
+                .then(() => {
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied';
+                    button.style.background = 'rgba(124, 77, 255, 0.6)';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = 'rgba(124, 77, 255, 0.2)';
+                    }, 1500);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+        }
+
+        function deleteRow(button) {
+            const row = button.parentElement;
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(50px) perspective(1000px) rotateX(10deg)';
+            setTimeout(() => row.remove(), 300);
+        }
+
+        function addRow(text = '') {
+            const container = document.getElementById('paste-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'paste-row';
+            newRow.style.opacity = '0';
+            newRow.innerHTML = `
+                <button class="delete-btn" onclick="deleteRow(this)">Delete</button>
+                <input type="text" placeholder="Enter Text ..." value="${text}">
+                <button onclick="copyText(this)">Copy</button>
+            `;
+            container.appendChild(newRow);
+            setTimeout(() => newRow.style.opacity = '1', 10);
+        }
+
+        function exportJSON() {
+            const rows = document.querySelectorAll('.paste-row input');
+            const data = Array.from(rows).map(input => input.value);
+            const jsonString = JSON.stringify(data, null, 2);
+            const jsonInput = document.getElementById('json-input');
+            jsonInput.value = jsonString;
+            
+            navigator.clipboard.writeText(jsonString)
+                .then(() => {
+                    const exportButton = document.querySelector('.export-import-buttons button');
+                    const originalText = exportButton.textContent;
+                    exportButton.textContent = 'Copy';
+                    exportButton.style.background = 'rgba(124, 77, 255, 0.6)';
+                    setTimeout(() => {
+                        exportButton.textContent = originalText;
+                        exportButton.style.background = 'rgba(124, 77, 255, 0.2)';
+                    }, 1500);
+                })
+                .catch(err => console.error('Failed to copy: ', err));
+        }
+
+        function loadJSON() {
+            try {
+                const jsonInput = document.getElementById('json-input');
+                const data = JSON.parse(jsonInput.value);
+                
+                if (!Array.isArray(data)) {
+                    throw new Error('Invalid JSON format');
+                }
+
+                const container = document.getElementById('paste-container');
+                container.innerHTML = '';
+                data.forEach(text => addRow(text));
+            } catch (error) {
+                alert('Failed to load: ' + error.message);
+            }
+        }
+
+        // Add initial row
+        addRow();
+    </script>
+</body>
+</html>
